@@ -1,29 +1,20 @@
-from time import time
+from flask import Flask, render_template
 
-from flask.app import Flask, g
-from flask import request
-
-app = Flask(__name__)
+from blog.report.views import report
+from blog.user.views import user
 
 
-@app.route("/<int:x>/int:y>", methods=['GET', 'POST'])
-def index(x: int, y: int):
-    return f"Hello, {x ** y}!"
+def create_app() -> Flask:
+    app = Flask(__name__)
+    register_blueprints(app)
+    return app
 
-@app.before_request
-def process_before_request():
 
-    g.start_time = time()
+def register_blueprints(app: Flask):
+    app.register_blueprints(user)
+    app.register_blueprints(report)
 
-@app.after_request
-def process_after_request(response):
 
-    if hasattr(g, "start_time"):
-        response.headers["process-time"] = time() - g.start_time
-
-    return response
-
-@app.errorhandler(404)
-def handler_404(error):
-    app.logger.error(error)
-    return '404'
+@user.route('/')
+def index():
+    return render_template('index.html')
