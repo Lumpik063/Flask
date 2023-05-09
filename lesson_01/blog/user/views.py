@@ -1,26 +1,29 @@
 from flask import Blueprint, render_template
+from flask_login import login_required
 from werkzeug.exceptions import NotFound
 
-user = Blueprint('user', __name__, url_prefix='/users', static_folder='../static')
+from blog.models import User
 
-USERS = ['Alice', 'Jon', 'Mike']
+user = Blueprint('user', __name__, url_prefix='/users', static_folder='../static')
 
 
 @user.route('/')
 def user_list():
+    users = User.query.all()
     return render_template(
         'users/list.html',
-        users=USERS,
+        users=users,
     )
 
 
 @user.route('/<int:pk>')
-def get_user(pk: int):
-    try:
-        user_name = USERS[pk]
-    except KeyError:
-        raise NotFound(f'User id {pk} not found')
+@login_required
+def profile(pk: int):
+    selected_user = User.query.filter_by(id=pk).one_or_none()
+    if not selected_user:
+        raise NotFound(f"User #{pk} doesn't exist!")
+
     return render_template(
-        'users/details.html',
-        users_name=user_name,
+        'users/profile.html',
+        user=selected_user,
     )
